@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+{% set jquery_version = '1.11.2' %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+  <title>Polyphony - {% block title%}{% endblock %}</title>
+  <link href="/static/css/bootstrap.css" rel="stylesheet" />
+  <link href="/static/css/polyphony.css" rel="stylesheet" />
+  <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+  <link rel="shortcut icon" href="/static/img/favicon.png" />
+  {% block style_block %}{# page-specific CSS #}{% endblock %}
+  {% block head_script %}{# defer-incapable JS block #}{% endblock %}
+</head>
+<body>
+  {% block content %}{# main content area #}{% endblock %}
+  <footer>
+      <div id="footer" class="container">
+          {% block footer %}{% endblock %}
+      </div>
+  </footer>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/{{ jquery_version }}/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.14/jquery.scrollTo.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/polyphony.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="//connect.soundcloud.com/sdk.js"></script>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+  {% block tail_script %}{# defer-capable JS block #}{% endblock %}
+</body>
+</html>
