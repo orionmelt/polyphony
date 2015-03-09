@@ -68,7 +68,7 @@ label {
   margin-bottom: 40px;
 }
 
-.data-source {
+.data-source, .data-source-icon {
   display: block;
   text-align: center;
   padding:6px 0px;
@@ -78,6 +78,15 @@ label {
   border-radius: 40px;
   border:2px solid #F2F1EF;
   opacity:0.4;
+}
+
+.data-source-icon {
+  display: inline-block;
+}
+
+.data-source.on, .data-source-icon.on {
+  background-color: #26A65B;
+  opacity:1;
 }
 
 footer {
@@ -98,11 +107,6 @@ footer a:hover {
 footer i.fa {
   font-size: 14px;
   padding:0px 2px;
-}
-
-.data-source.on {
-  background-color: #26A65B;
-  opacity:1;
 }
 
 #sidebar .list-group-item {
@@ -157,7 +161,7 @@ footer i.fa {
 }
 
 .heading, .sub-heading {
-  font-family: 'Montserrat','Source Sans Pro', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   margin-top:0px;
   margin-bottom: 10px;
   color: #2ecc71;
@@ -220,7 +224,7 @@ footer i.fa {
 }
 
 #ppp-info .source a:hover {
-  background-color: #4c6b8a;
+  color: #fff;
 }
 
 #ppp-info .source a {
