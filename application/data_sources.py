@@ -80,9 +80,10 @@ class Reddit(BaseDataSource):
                 mentions.append(mention)
             else:
                 if track_host.key.id()=="youtube":
-                    track = Track.get_by_id(
-                        "youtube_"+self.youtube.parse_track_id(url)
-                    )
+                    track_id = self.youtube.parse_track_id(url)
+                    if not track_id:
+                        continue
+                    track = Track.get_by_id("youtube_"+track_id)
                     if not track:
                         track = self.youtube.get_track_by_url(url)
                         if not track:
