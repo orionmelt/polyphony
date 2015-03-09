@@ -56,8 +56,8 @@ def get_playlist_json():
 def home():
     return render_template('index.html', playlist=get_playlist(), data_sources=get_all_data_sources())
 
-def crawl(frequency=None):
-    backend.crawl(frequency)
+def crawl(frequency=60):
+    backend.crawl(int(frequency))
     return "OK"
 
 @admin_required
