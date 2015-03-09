@@ -330,7 +330,7 @@
     // If selected playlist is the default, switch to it
     if(playlist_name==="default_playlist") {
       this.set_playlist(default_playlist);
-      $("#current-playlist-name").text("Hot Around the Web");
+      $("#current-playlist-name").text("Trending Now");
     }
 
     // If selected playlist is a custom playlist, load it from local storage
