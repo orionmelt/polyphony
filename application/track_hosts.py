@@ -4,6 +4,7 @@ import re
 import difflib
 from collections import namedtuple
 from urlparse import urlparse, parse_qs
+from secret_keys import YOUTUBE_API_KEY, SOUNDCLOUD_CLIENT_ID
 
 import requests
 import soundcloud
@@ -39,7 +40,7 @@ class YouTube(BaseTrackHost):
 
     """
 
-    API_KEY = "AIzaSyAJ0em8O_2LVGBQhZAiDZnFZIPtDQw1j8Q"
+    API_KEY = YOUTUBE_API_KEY
 
     def __init__(self):
         super(YouTube, self).__init__("youtube")
@@ -153,7 +154,7 @@ class SoundCloud(BaseTrackHost):
 
     """
 
-    CLIENT_ID = "d3012111d6ea13fa210b214f82b7be3a"
+    CLIENT_ID = SOUNDCLOUD_CLIENT_ID
 
     def __init__(self):
         super(SoundCloud, self).__init__("soundcloud")
