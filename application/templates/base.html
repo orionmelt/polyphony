@@ -9,7 +9,7 @@
   <link href="/static/css/bootstrap.css" rel="stylesheet" />
   <link href="/static/css/polyphony.css" rel="stylesheet" />
   <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Signika:400,300' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
   <link rel="shortcut icon" href="/static/img/favicon.png" />
@@ -17,19 +17,26 @@
   {% block head_script %}{# defer-incapable JS block #}{% endblock %}
 </head>
 <body>
+  {% include 'includes/nav.html' %}
   {% block content %}{# main content area #}{% endblock %}
   <footer>
       <div id="footer" class="container">
-          {% block footer %}{% endblock %}
+        <ul class="list-inline">
+          <li><a href="http://github.com/orionmelt/polyphony"><i class="fa fa-github"></i></a></li>
+          <li>
+            Music hosted on <a href="http://soundcloud.com/"><i class="fa fa-soundcloud"></i></a> and <a href="http://www.youtube.com/"><i class="fa fa-youtube"></i></a>  
+          </li>
+          <li>&copy; 2015 POLYPHONY</li>
+        </ul>
+        {% block footer %}{% endblock %}
       </div>
   </footer>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/{{ jquery_version }}/jquery.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.14/jquery.scrollTo.min.js"></script>
   <script src="/static/js/bootstrap.min.js"></script>
-  <script src="/static/js/polyphony.js"></script>
-  <script src="/static/js/main.js"></script>
   <script src="//connect.soundcloud.com/sdk.js"></script>
   <script src="https://w.soundcloud.com/player/api.js"></script>
+  <script src="/static/js/polyphony.js"></script>
   {% block tail_script %}{# defer-capable JS block #}{% endblock %}
 </body>
 </html>

@@ -20,6 +20,7 @@ class DataSource(ndb.Model):
 		refresh_frequency	- Refresh frequency value (in minutes) - tells us how often we should refresh data from this source. 
 		date_added			- DateTime this data source entry was added.
 		date_updated		- DateTime this data source entry was last updated.
+		enabled				- Boolean flag that denotes whether this source is enabled or not.
 
 	"""
 
@@ -30,6 +31,8 @@ class DataSource(ndb.Model):
 	refresh_frequency = ndb.IntegerProperty(default=60) 
 	date_added = ndb.DateTimeProperty(auto_now_add=True)
 	date_updated = ndb.DateTimeProperty(auto_now=True)
+	description = ndb.TextProperty()
+	enabled = ndb.BooleanProperty(default=True)
 
 
 class TrackHost(ndb.Model):

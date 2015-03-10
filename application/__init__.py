@@ -16,7 +16,7 @@ elif 'SERVER_SOFTWARE' in os.environ and os.environ['SERVER_SOFTWARE'].startswit
     # Development settings
     app.config.from_object('application.settings.Development')
     # Flask-DebugToolbar
-    toolbar = DebugToolbarExtension(app)
+    ##toolbar = DebugToolbarExtension(app)
 
     '''
     # Google app engine mini profiler

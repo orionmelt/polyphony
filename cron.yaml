@@ -5,3 +5,6 @@ cron:
 - description: 4 hour crawl job
   url: /crawl/240
   schedule: every 4 hours
+- description: daily crawl job
+  url: /crawl/1440
+  schedule: every 24 hours

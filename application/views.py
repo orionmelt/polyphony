@@ -16,7 +16,7 @@ import backend, logging
 cache = Cache(app)
 
 def get_all_data_sources():
-    all_data_sources = DataSource.query().order(DataSource.source_type).fetch()
+    all_data_sources = DataSource.query(DataSource.enabled == True).order(DataSource.source_type).fetch()
     return all_data_sources
 
 def get_playlist(data_sources=None):
@@ -25,7 +25,7 @@ def get_playlist(data_sources=None):
         logging.info(data_source_keys)
         mentions = TrackMention.query(TrackMention.data_source.IN(data_source_keys)).order(-TrackMention.date_updated).fetch(100)
     else:
-        mentions = TrackMention.query().order(-TrackMention.date_updated).fetch(20)
+        mentions = TrackMention.query().order(-TrackMention.date_updated).fetch(100)
     playlist = []
 
     for mention in mentions:
@@ -56,8 +56,8 @@ def get_playlist_json():
 def home():
     return render_template('index.html', playlist=get_playlist(), data_sources=get_all_data_sources())
 
-def crawl(frequency=None):
-    backend.crawl(frequency)
+def crawl(frequency=60):
+    backend.crawl(int(frequency))
     return "OK"
 
 @admin_required
