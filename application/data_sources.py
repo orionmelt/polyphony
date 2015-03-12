@@ -59,12 +59,19 @@ class Reddit(BaseDataSource):
         resource_json = resource.json()
         for submission in resource_json["data"]["children"]:
             reddit_id = submission["data"]["id"]
-            permalink = "http://www.reddit.com"+submission["data"]["permalink"].lower()
+            permalink = \
+                "http://www.reddit.com"+submission["data"]["permalink"].lower()
             url = submission["data"]["url"]
             reddit_title = submission["data"]["title"].encode("ascii","ignore")
             domain = submission["data"]["domain"].lower()
+            subreddit = submission["data"]["subreddit"]
 
-            # Now that we have the domain, let's see if it is a supported TrackHost.
+
+            artist = None
+            title = None
+
+            # Now that we have the domain, let's see 
+            # if it is a supported TrackHost.
             track_host = TrackHost.query(TrackHost.domains==domain).get()
 
             # TODO - Handle subdomains such as m.youtube.com
@@ -79,6 +86,16 @@ class Reddit(BaseDataSource):
                 mention.hotness_score = position
                 mentions.append(mention)
             else:
+                # Parse mention title to extract artist and track title
+
+                if subreddit.lower() in ["listentothis", "music"]:
+                    reddit_title = reddit_title.replace("--", "-")
+                    g = re.match(r"(.+) - ([^\[]+)", reddit_title).groups()
+                    if not g:
+                        # Title does not follow guidelines, skip this mention
+                        continue
+                    artist, title = g
+
                 if track_host.key.id()=="youtube":
                     track_id = self.youtube.parse_track_id(url)
                     if not track_id:
@@ -89,14 +106,18 @@ class Reddit(BaseDataSource):
                         if not track:
                             continue
                         else:
-                            track.title = track.title or reddit_title
+                            if artist and title:
+                                track.title = \
+                                    artist.strip() + " - " + title.strip()
                             tracks.append(track)
                 elif track_host.key.id()=="soundcloud":
                     track = self.soundcloud.get_track_by_url(url)
                     if not track:
                         continue
                     if not Track.get_by_id(track.key.id()):
-                        track.title = track.title or reddit_title
+                        if artist and title:
+                            track.title = \
+                                    artist.strip() + " - " + title.strip()
                         tracks.append(track)
                 
                 mention = TrackMention(
@@ -296,7 +317,8 @@ class Pitchfork(BaseDataSource):
             iframe_source = urllib2.unquote(iframe["src"])
 
             if "soundcloud.com" in iframe_source.lower():
-                soundcloud_url = self.re_soundcloud_url.findall(iframe_source)[0]
+                soundcloud_url = \
+                    self.re_soundcloud_url.findall(iframe_source)[0]
                 if soundcloud_url:
                     track = self.soundcloud.get_track_by_url(soundcloud_url)
             elif "youtube.com" in iframe_source.lower():
