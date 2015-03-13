@@ -62,7 +62,7 @@ class Reddit(BaseDataSource):
             permalink = \
                 "http://www.reddit.com"+submission["data"]["permalink"].lower()
             url = submission["data"]["url"]
-            reddit_title = submission["data"]["title"].encode("ascii","ignore")
+            reddit_title = submission["data"]["title"]
             domain = submission["data"]["domain"].lower()
             subreddit = submission["data"]["subreddit"]
 
@@ -90,7 +90,7 @@ class Reddit(BaseDataSource):
 
                 if subreddit.lower() in ["listentothis", "music"]:
                     reddit_title = reddit_title.replace("--", "-")
-                    g = re.match(r"(.+) - ([^\[]+)", reddit_title).groups()
+                    g = re.match(r"([^\[]+) - ([^\[]+)", reddit_title).groups()
                     if not g:
                         # Title does not follow guidelines, skip this mention
                         continue
@@ -307,7 +307,7 @@ class Pitchfork(BaseDataSource):
 
         for item in resource_soup.find_all("item"):
             track = None
-            item_title = item.title.contents[0].encode("ascii", "ignore")
+            item_title = item.title.contents[0]
             artist, title = self.re_item_title.match(item_title).groups()
             title = re.sub(r"\"","",title)
             description_soup = BeautifulSoup(item.description.contents[0])
