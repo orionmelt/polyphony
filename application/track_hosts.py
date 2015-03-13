@@ -83,13 +83,13 @@ class YouTube(BaseTrackHost):
         
         if not video_id:
             return None
-        request_url = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&key=%s&id=%s" % (self.API_KEY,video_id)
+        request_url = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,status&key=%s&id=%s" % (self.API_KEY,video_id)
         api_response = requests.get(request_url)
         api_response_json = api_response.json()
 
         # TODO - Error handling for rate-limiting, service unavailable, etc.
 
-        if api_response_json["items"]:
+        if api_response_json["items"] and api_response_json["items"][0]["status"]["embeddable"]:
             title = api_response_json["items"][0]["snippet"]["title"]
             duration = \
                 api_response_json["items"][0]["contentDetails"]["duration"]
