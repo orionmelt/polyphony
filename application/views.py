@@ -10,7 +10,7 @@ from flask_cache import Cache
 from application import app
 from google.appengine.ext import ndb
 from models import DataSource, Track, TrackMention
-import backend, logging
+import backend, logging, json, urllib2
 
 # Flask-Cache (configured to use App Engine Memcache API)
 cache = Cache(app)
@@ -22,7 +22,6 @@ def get_all_data_sources():
 def get_playlist(data_sources=None):
     if data_sources:
         data_source_keys = [ndb.Key("DataSource", x) for x in data_sources if x]
-        logging.info(data_source_keys)
         mentions = TrackMention.query(TrackMention.data_source.IN(data_source_keys)).order(-TrackMention.date_updated).fetch(100)
     else:
         mentions = TrackMention.query().order(-TrackMention.date_updated).fetch(100)
@@ -54,7 +53,12 @@ def get_playlist_json():
 
 #@cache.cached(timeout=1800)
 def home():
-    return render_template('index.html', playlist=get_playlist(), data_sources=get_all_data_sources())
+    data_sources = None
+    d = request.cookies.get("data_sources")
+    if d:
+        data_sources = json.loads(urllib2.unquote(d));
+    playlist = get_playlist(data_sources=data_sources)
+    return render_template('index.html', playlist=playlist, playlist_json=json.dumps(playlist), data_sources=get_all_data_sources())
 
 def crawl(frequency=60):
     backend.crawl(int(frequency))
