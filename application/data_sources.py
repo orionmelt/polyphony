@@ -186,8 +186,8 @@ class HypeMachine(BaseDataSource):
                     id = source_type + "_" + hypem_post_id,
                     data_source = self.data_source.key,
                     track = track.key,
-                    mention_title = resource_json[key]["sitename"],
-                    mention_url = resource_json[key]["posturl"],
+                    mention_title = artist + " - " + title,
+                    mention_url = "http://hypem.com/track/" + resource_json[key]["mediaid"],
                     hotness_score = int(key)
                 )
                 mentions.append(mention)
