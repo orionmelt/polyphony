@@ -314,6 +314,7 @@ class Pitchfork(BaseDataSource):
             iframe = description_soup.find("iframe")
             if not iframe:
                 continue
+            post_id = re.findall(r"\d+", item.guid.contents[0])[0]
             iframe_source = urllib2.unquote(iframe["src"])
 
             if "soundcloud.com" in iframe_source.lower():
@@ -330,7 +331,7 @@ class Pitchfork(BaseDataSource):
             track.title = artist + " - " + title
             tracks.append(track)
             mention = TrackMention(
-                id = source_type + "_" + item.guid.contents[0],
+                id = source_type + "_" + post_id,
                 data_source = self.data_source.key,
                 track = track.key,
                 mention_title = item_title,
