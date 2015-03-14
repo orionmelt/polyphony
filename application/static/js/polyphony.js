@@ -13,13 +13,12 @@
       soundcloud_player = null,
       current_player = null,
       player_state = UNDEFINED,
-      default_playlist = null,
-      current_playlist = null;
+      default_playlist = null;
 
   var play_button, prev_button, next_button;
 
   polyphony.initialize = function(options) {
-    playlist = default_playlist = current_playlist = options.playlist || [];
+    playlist = default_playlist = options.playlist || [];
 
     play_button = $("#" + (options.play_button || "ppp-play"));
     prev_button = $("#" + (options.prev_button || "ppp-prev"));
@@ -45,14 +44,16 @@
       that.next();
     });
 
-    if (!options.data_sources) {
-      var data_sources = playlist.map(function(d) {
+    // If no data sources selected (first time), derive list of all data sources
+    // from playlist.
+    if (!options.data_sources || !options.data_sources.length) {
+       data_sources = playlist.map(function(d) {
         return d.data_source_id;
       }).reduce(function(p, c) {
         if (p.indexOf(c) < 0) p.push(c);
         return p;
       }, []);
-      localStorage.setItem("data_sources", JSON.stringify(data_sources));
+      $.cookie("data_sources",data_sources,{expires:30});
       data_sources.forEach(function(d) {
         $("#"+d).addClass("on");
       });
@@ -69,6 +70,7 @@
     players.forEach(function(d) {
       $("#"+d+"-container").addClass("hide");
     });
+    $("#player-loading").hide();
     $("#"+player+"-container").removeClass("hide");
   };
 
@@ -76,19 +78,20 @@
     // All players are now loaded
     
     // Hide all other players except for the first track
-    first_track = current_playlist[0];
+    first_track = playlist[0];
     current_player = first_track.track_host;
     this.set_player(current_player);
 
     // Refresh playlist
-    this.refresh_playlist();
+    this.rebuild_playlist();
   };
 
   polyphony.show_info = function(track) {
-    $("#ppp-info .title").text(track.title);
+    $("#ppp-info .title").html(track.title);
     $("#ppp-info .source").html(
-      '<a href="' + track.mention_url+ '" target="_blank"><i class="fa fa-comment"></i> ' + 
-        track.data_source_name + ' : ' + (track.mention_title.substring(0,50) + (track.mention_title.length>=50 ? '...' : '')) + '</a>'
+      '<a href="' + track.mention_url+ '" target="_blank">' + 
+        track.data_source_name + 
+      '</a>'
     );
   };
   
@@ -148,7 +151,7 @@
 
 
       // Get the current track and show info
-      t = current_playlist[current_track];
+      t = playlist[current_track];
       this.show_info(t);
       
       if(!t) {
@@ -174,7 +177,6 @@
         $("#"+d+"-container").addClass("hide");
       }
     });
-
   };
 
   polyphony.stop = function() {
@@ -205,13 +207,13 @@
   };
 
   polyphony.prev = function(options) {
-    current_track = current_track===0 ? current_playlist.length-1 : current_track-1 ;
+    current_track = current_track===0 ? playlist.length-1 : current_track-1 ;
     this.stop();
     this.play();
   };
 
   polyphony.next = function(options) {
-    current_track = current_track===current_playlist.length-1 ? 0 : current_track+1 ;
+    current_track = current_track===playlist.length-1 ? 0 : current_track+1 ;  
     this.stop();
     this.play();
   };
@@ -225,7 +227,11 @@
     // Add or remove starred playlist menu item to sidebar
     if(starred_playlist) {
       if(!$('[data-name="starred_playlist"]').length) {
-        $("#saved-playlists-list").append('<li class="list-group-item"><a class="saved-playlist" data-name="starred_playlist" href="#"><i class="fa fa-star"></i> Starred Songs</a></li>');
+        $("#saved-playlists-list").append(
+          '<li class="list-group-item">' +
+            '<a class="saved-playlist" data-name="starred_playlist" href="#"><i class="fa fa-star"></i> Starred Songs</a>' + 
+          '</li>'
+        );
       }
     } else {
       $("#saved-playlists-list").find('[data-name="starred_playlist"]').remove();
@@ -238,13 +244,18 @@
     saved_playlists.forEach(function(d) {
       var exists = $("#saved-playlists-list").find('[data-name="'+d.name+'"]').length;
       if (!exists) {
-        $("#saved-playlists-list").append('<li class="list-group-item"><a class="saved-playlist" data-name="' + d.name + '" href="#"><i class="fa fa-music"></i> ' + d.name + '</a></li>');
+        $("#saved-playlists-list").append(
+          '<li class="list-group-item">' + 
+            '<a class="saved-playlist" data-name="' + d.name + '" href="#"><i class="fa fa-music"></i> ' + d.name + '</a>' + 
+          '</li>'
+        );
         $("#playlist-dropdown").append(
           '<a href="#" class="add-to-playlist list-group-item" data-playlist-name="' + d.name + '" data-track-number="">' +
             '<span><i class="fa fa-music"></i></span>' +
             '<span>'+ d.name + '</span>' +
           '</a>'
         );
+
         $('.add-to-playlist').click(function(event) {
           event.preventDefault();
           event.stopPropagation();
@@ -253,7 +264,7 @@
             $("#new-playlist-track").val(t);
             $("#new-playlist-modal").modal("show");
           } else {
-            var track_to_add = current_playlist[t];
+            var track_to_add = playlist[t];
             that.add_to_playlist($(this).data("playlist-name"), track_to_add);
           }
         });
@@ -310,11 +321,14 @@
 
   // Given a playlist name, load it and set up to play
   polyphony.load_playlist = function(playlist_name) {
-    
     // If currently playing, stop it
     if(player_state===PLAYING) {
       this.stop();
     }
+
+    // Set the new playlist active
+    $('.saved-playlist').parent().removeClass("active");
+    $('.saved-playlist[data-name="' + playlist_name + '"]').parent().addClass("active");
 
     // If selected playlist is the starred playlist, load it from local storage
     if(playlist_name==="starred_playlist") {
@@ -345,88 +359,22 @@
     if(!playlist_to_load) return;
 
     this.set_playlist(playlist_to_load.tracks);
+    
     $("#current-playlist-name").text(playlist_to_load.name);
     $("#playlist").scrollTo($("#track0"));
   };
 
-  polyphony.refresh_playlist = function() {
-    // If playing a track, stop it first
-    if(player_state===PLAYING) {
-      this.stop();
-    }
-    
-    // Empty the playlist div
-    $("#playlist").empty();
-    
-    var i =0;
+  polyphony.setup_playlist_actions = function() {
     var that = this;
-    current_track = 0;
-
-    // Load starred tracks from local storage
-    var starred_playlist = JSON.parse(localStorage.getItem("starred_playlist"));
-
-
-    current_playlist.forEach(function(track) {
-
-      // If track is starred, mark it as such
-      if(starred_playlist) {
-        var starred = $.grep(starred_playlist,function(d) {
-          return d.id==track.id && d.track_host==track.track_host;
-        }).length ? "starred" : "";
-      } else {
-        starred = "";
+    // Setup options button hover
+    $(".track-container").hover(
+      function() {
+        $(this).find(".options").removeClass("hide");
+      },
+      function() {
+        $(this).find(".options").addClass("hide");
       }
-      
-      // Construct playlist div
-      $("#playlist").append(
-        '<div class="list-group-item track-container" data-track-number="' + i + '" id="track' + i + '">' + 
-          '<div class="row track">' +
-            '<div class="col-md-10 col-sm-10 col-xs-10">' +
-              '<div class="track-title">' + 
-                '<div class="pull-left">' + 
-                  '<i class="fa fa-star star-button ' + starred + '" data-track-id="' + track.id + '" data-track-host="' + track.track_host + '"></i>' + 
-                  track.title.substring(0,50) + (track.title.length>=50 ? '...' : '') + 
-                '</div>' + 
-                '<div class="pull-right options hide">' +
-                  '<a href="#" class="options-button">' + 
-                    '<i class="fa fa-plus"></i>' +
-                  '</a>' + 
-                '</div>' + 
-              '</div>' +
-            '</div>' + 
-            '<div class="col-md-2 col-sm-2 col-xs-2">' + 
-              '<div class="track-length">' + track.duration + '</div>' + 
-            '</div>' + 
-          '</div>' +
-        '</div>'
-      );
-
-      i++;
-
-      // Setup options button hover
-      $(".track-container").hover(
-        function() {
-          $(this).find(".options").removeClass("hide");
-        },
-        function() {
-          $(this).find(".options").addClass("hide");
-        }
-      );
-
-    });
-    
-    /*
-    // Setup options dropdown
-    var playlist_dropdowns = 
-      '<ul class="dropdown-menu">' + 
-      '<li><a class="add-to-playlist" data-name="new-playlist" tabindex="-1" href="#"><i class="fa fa-plus"></i> New Playlist</a></li>' + 
-      //playlist_list +
-      '</ul>';
-
-    $(".options").append(playlist_dropdowns);
-
-    $(".dropdown-toggle").dropdown('toggle');
-    */
+    );
 
     $(".options-button").click(function(event) {
       event.preventDefault();
@@ -450,7 +398,7 @@
         $("#new-playlist-track").val(t);
         $("#new-playlist-modal").modal("show");
       } else {
-        var track_to_add = current_playlist[t];
+        var track_to_add = playlist[t];
         that.add_to_playlist($(this).data("playlist-name"), track_to_add);
       }
     });
@@ -473,14 +421,6 @@
       $(".list-group-item").removeClass("hovered");
       $("#playlist-dropdown").hide();
     });
-
-    // Reset state of items in playlist
-    if(player_state===PLAYING) {
-      $("#playlist .track-container").removeClass("active");
-      $("#playlist .track-container").removeClass("now-playing");
-
-      $("#playlist .track-container").first().addClass("active");
-    }
 
     // Setup manual track selection
     $(".track-container").click(function(e) {
@@ -509,7 +449,7 @@
       // Get track star button was clicked on
       var track_id = $(this).data("track-id");
       var track_host = $(this).data("track-host");
-      var track = current_playlist.filter(function(d) {
+      var track = playlist.filter(function(d) {
         return d.id==track_id && d.track_host==track_host;
       }).shift();
 
@@ -564,10 +504,71 @@
 
     });
 
-    // Set first track active
-    $(".track-container").first().addClass("active");
+  }
 
-    first_track = current_playlist[0];
+  polyphony.rebuild_playlist = function() {
+    // If playing a track, stop it first
+    if(player_state===PLAYING) {
+      this.stop();
+    }
+    
+    // Empty the playlist div
+    $("#playlist").empty();
+    
+    var that = this;
+    var i =0;
+    // Load starred tracks from local storage
+    var starred_playlist = JSON.parse(localStorage.getItem("starred_playlist"));
+
+    playlist.forEach(function(track) {
+
+      // If track is starred, mark it as such
+      if(starred_playlist) {
+        var starred = $.grep(starred_playlist,function(d) {
+          return d.id==track.id && d.track_host==track.track_host;
+        }).length ? "starred" : "";
+      } else {
+        starred = "";
+      }
+      
+      // Construct playlist div
+      $("#playlist").append(
+        '<div class="list-group-item track-container" data-track-number="' + i + '" id="track' + i + '">' + 
+          '<div class="row track">' +
+            '<div class="col-md-10 col-sm-10 col-xs-10">' +
+              '<div class="track-title">' + 
+                '<div class="pull-left">' + 
+                  '<i class="fa fa-star star-button ' + starred + '" data-track-id="' + track.id + '" data-track-host="' + track.track_host + '"></i>' + 
+                  track.title.substring(0,50) + (track.title.length>=50 ? '...' : '') + 
+                '</div>' + 
+                '<div class="pull-right options hide">' +
+                  '<a href="#" class="options-button">' + 
+                    '<i class="fa fa-plus"></i>' +
+                  '</a>' + 
+                '</div>' + 
+              '</div>' +
+            '</div>' + 
+            '<div class="col-md-2 col-sm-2 col-xs-2">' + 
+              '<div class="track-length">' + track.duration + '</div>' + 
+            '</div>' + 
+          '</div>' +
+        '</div>'
+      );
+
+      i++;
+    });
+    
+    // Call setup playlist actions
+    this.setup_playlist_actions();
+
+    current_track = 0;
+    // Reset state of items in playlist
+    $("#playlist .track-container").removeClass("active");
+    $("#playlist .track-container").removeClass("now-playing");
+
+    $("#playlist .track-container").first().addClass("active");
+
+    first_track = playlist[0];
     current_player = first_track.track_host;
     if(current_player==="youtube" && youtube_player) {
       this.set_youtube_track(first_track);
@@ -580,42 +581,41 @@
     this.show_info(first_track);
   };
 
-  polyphony.update_playlist = function() {
+  polyphony.update_default_playlist = function() {
     var that = this;
+    var i = default_playlist.length;
     var request_url = "/playlist" + (data_sources ? "?data_sources="+data_sources.join(",") : "");
+    $("#current-playlist-name").append(' <i class="fa fa-spinner fa-spin"></i>');
     $.ajax(request_url).done(function(data) {
       default_playlist = default_playlist.concat(data.playlist.filter(function(d) {
         return !default_playlist.some(function(x) {
           return d.id===x.id;
         });
       }));
-      current_playlist = default_playlist;
-      that.refresh_playlist();
+      playlist = default_playlist;
+      that.load_playlist("default_playlist");
     });
-    setTimeout(function() {
-      that.update_playlist();
-    }, 1800000);
   };
 
   polyphony.set_playlist = function(p) {
-    current_playlist = p;
-    this.refresh_playlist();
+    playlist = p;
+    this.rebuild_playlist();
   };
 
   polyphony.set_data_sources = function(d) {
     data_sources = d;
-    current_playlist = default_playlist = [];
-    this.update_playlist();
+    default_playlist = [];
+    this.update_default_playlist();
   };
 
   polyphony.ready = function() {
     var that = this;
+    $.cookie.json = true;
     $('[data-toggle="tooltip"]').tooltip();
 
     // Set up data source icons
-    data_sources = JSON.parse(localStorage.getItem("data_sources"));
+    data_sources = $.cookie("data_sources");
     if(data_sources) {
-      //$(".data-source").addClass("off");
       data_sources.forEach(function(d) {
         $("#"+d).addClass("on");
       });
@@ -627,7 +627,7 @@
       event.stopPropagation();
       $(this).toggleClass("on");
 
-      var data_sources = JSON.parse(localStorage.getItem("data_sources")) || [];
+      var data_sources = $.cookie("data_sources") || [];
 
       if($.grep(data_sources, function(d) {
         return d===source_id;
@@ -638,21 +638,14 @@
       } else {
         data_sources.push(source_id);
       }
-      localStorage.setItem("data_sources",JSON.stringify(data_sources));
+      $.cookie("data_sources", data_sources, {expires:30});
       polyphony.set_data_sources(data_sources);
     });
 
-    // Load playlist from server
-    $.ajax("/playlist" + (data_sources ? "?data_sources="+data_sources.join(",") : "")).done(function(data) {
-      that.initialize({
-        playlist:data.playlist,
-        data_sources:data_sources
-      });
+    this.initialize({
+      playlist:p,
+      data_sources:data_sources
     });
-    
-    setTimeout(function() {
-      that.update_playlist();
-    }, 1800000);
     
     this.show_saved_playlists();
 
@@ -660,7 +653,7 @@
 
     $("#new-playlist-form").submit(function(event) {
       event.preventDefault();
-      var track_to_add = current_playlist[$("#new-playlist-track").val()];
+      var track_to_add = playlist[$("#new-playlist-track").val()];
       var new_playlist_name = $("#new-playlist-name").val();
       var c = that.create_playlist(new_playlist_name, track_to_add);
       if(c) {
@@ -672,6 +665,16 @@
       }
     });
   };
+
+  polyphony.handle_track_error = function(track, error) {
+    var c = track;
+    // TODO - Send error to server
+    //if(!error) error="UNKNOWN_ERROR";
+    //$.ajax("/track-error?track_id="+playlist[c].track_host+"_"+playlist[c].id+"&error="+error);
+    playlist.splice(track--,1);
+    this.rebuild_playlist();
+    this.play(c);
+  }
 
   /* YouTube */
 
@@ -685,7 +688,7 @@
   polyphony.youtube_ready = function(options) {
     var that = this;
     
-    first_youtube_track = $.grep(current_playlist, function(d) {
+    first_youtube_track = $.grep(playlist, function(d) {
       return d.track_host==="youtube";
     })[0];
     if(!first_youtube_track) {
@@ -704,10 +707,8 @@
       videoId: first_youtube_track.id,
       events: {
         'onError': function(event) {
-          current_playlist.splice(current_track--,1);
-          that.refresh_playlist();
           setTimeout(function() {
-            that.next();
+            that.handle_track_error(current_track,event.data);
           }, 2000);
         },
         'onStateChange': function(event) {
@@ -784,6 +785,12 @@
       $($("#playlist .track-container")[current_track]).removeClass("now-playing");
       $($("#playlist .track-container")[current_track]).addClass("paused");
       player_state = PAUSED;
+    });
+
+    soundcloud_player.bind(SC.Widget.Events.ERROR,function() {
+      setTimeout(function() {
+        that.handle_track_error(current_track);
+      }, 2000);
     });
 
     soundcloud_player.bind(SC.Widget.Events.FINISH, function() {
