@@ -34,13 +34,11 @@ def initialize_datastore():
     r_music = DataSource(
         id = "r_music",
         source_type = "reddit",
-        display_name = "Music on reddit",
+        display_name = "/r/Music",
         source_url = "http://www.reddit.com/r/Music.json?limit=25",
         info_link = "http://www.reddit.com/r/Music",
         refresh_frequency = 60,
-        description = """/r/Music is the most popular subreddit about music, with over 6.5 million members."""
-
-
+        description = """/r/Music is the most popular subreddit about music, with over 6.5 million subscribers."""
     )
 
     r_music.put()
@@ -48,11 +46,11 @@ def initialize_datastore():
     r_listentothis = DataSource(
         id = "r_listentothis",
         source_type = "reddit",
-        display_name = "ListenToThis on reddit",
-        source_url = "http://www.reddit.com/r/ListenToThis.json?limit=25",
-        info_link = "http://www.reddit.com/r/ListenToThis",
+        display_name = "/r/listentothis",
+        source_url = "http://www.reddit.com/r/listentothis.json?limit=25",
+        info_link = "http://www.reddit.com/r/listentothis",
         refresh_frequency = 60,
-        description = """/r/ListenToThis is a place to discover music by new or overlooked artists, with over 2.5 million members."""
+        description = """/r/listentothis is a place to discover music by new or overlooked artists and has over 2.5 million subscribers."""
     )
 
     r_listentothis.put()
@@ -76,6 +74,7 @@ def initialize_datastore():
         source_url = "http://www.npr.org/rss/rss.php?id=15709577",
         info_link = "http://www.npr.org/blogs/allsongs/",
         refresh_frequency = 1440,
+        description = """All Songs Considered is a weekly online multimedia program from NPR and a source of discovery for new music of all genres""",
         enabled = False
     )
 
